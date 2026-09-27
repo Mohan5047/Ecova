@@ -29,8 +29,8 @@ export function Register() {
       setError("Please enter a valid email address.");
       return;
     }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
       return;
     }
     if (password !== confirmPassword) {
@@ -42,8 +42,8 @@ export function Register() {
       setLoading(true);
       await register(name.trim(), email.trim(), password, phone.trim());
       navigate("/dashboard");
-    } catch {
-      setError("Registration could not be completed. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "Registration could not be completed. Please try again.");
     } finally {
       setLoading(false);
     }

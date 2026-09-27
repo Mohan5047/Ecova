@@ -17,7 +17,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import StatusBadge from "../components/StatusBadge";
 import Modal from "../components/Modal";
-import { storageService } from "../services/storageService";
+import { api } from "../services/api";
 import type { Report, User } from "../types";
 import "../App.css";
 
@@ -39,9 +39,17 @@ export function AdminDashboard() {
     onConfirm: () => {},
   });
 
-  const loadData = () => {
-    setReports(storageService.getReports());
-    setUsers(storageService.getUsers());
+  const loadData = async () => {
+    try {
+      const [allReports, allUsers] = await Promise.all([
+        api.getReports(),
+        api.getAdminUsers(),
+      ]);
+      setReports(allReports);
+      setUsers(allUsers);
+    } catch (err) {
+      console.error("Failed to load admin data:", err);
+    }
   };
 
   useEffect(() => {

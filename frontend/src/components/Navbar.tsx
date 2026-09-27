@@ -14,7 +14,8 @@ import {
   Building2,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { storageService } from "../services/storageService";
+import { api } from "../services/api";
+import { socketService } from "../services/socket";
 import type { Notification } from "../types";
 import NotificationPanel from "./NotificationPanel";
 
@@ -25,14 +26,36 @@ export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
 
-  const refreshNotifications = () => {
-    const list = storageService.getNotifications(user?.id);
-    setNotifications(list);
+  const refreshNotifications = async () => {
+    try {
+      const list = await api.getNotifications();
+      setNotifications(list);
+    } catch {
+      // Keep existing list on network issue
+    }
   };
 
   useEffect(() => {
-    const list = storageService.getNotifications(user?.id);
-    setNotifications(list);
+    refreshNotifications();
+
+    // Listen for live real-time notifications via Socket.IO
+    const unsubscribe = socketService.onNotification((newNotif: any) => {
+      setNotifications((prev) => [
+        {
+          id: newNotif.id?.toString() || Date.now().toString(),
+          title: newNotif.title,
+          message: newNotif.message,
+          createdAt: newNotif.created_at || new Date().toISOString(),
+          read: false,
+          type: "info",
+        },
+        ...prev,
+      ]);
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, [user]);
 
   const closeMenu = () => {
@@ -42,14 +65,22 @@ export function Navbar() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const handleMarkAllRead = () => {
-    storageService.markAllNotificationsAsRead(user?.id);
-    refreshNotifications();
+  const handleMarkAllRead = async () => {
+    try {
+      await api.markAllNotificationsRead();
+      await refreshNotifications();
+    } catch {
+      // silent
+    }
   };
 
-  const handleNotificationClick = (notifId: string) => {
-    storageService.markNotificationAsRead(notifId);
-    refreshNotifications();
+  const handleNotificationClick = async (notifId: string) => {
+    try {
+      await api.markNotificationRead(notifId);
+      await refreshNotifications();
+    } catch {
+      // silent
+    }
   };
 
   const getDashboardRoute = () => {

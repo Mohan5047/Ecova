@@ -38,7 +38,9 @@ INSERT INTO reports (id, report_code, user_id, category_id, description, severit
 (5, 'ECOVA-100005', 'c0000000-0000-0000-0000-000000000001', 5, 'Cracked and displaced concrete stormwater drain slabs posing extreme tripping risk near bus stop.', 'HIGH', 12.9738, 77.6119, 'MG Road Metro Station Exit B, Bengaluru', 'https://images.unsplash.com/photo-1590496793929-36417d3117de?auto=format&fit=crop&w=800&q=80', 'UNDER_REVIEW', 'a0000000-0000-0000-0000-000000000002', NOW() - INTERVAL '2 days', NOW() - INTERVAL '1 day')
 ON CONFLICT (report_code) DO NOTHING;
 
--- Advance sequence past seeded codes
+-- Advance sequences past seeded IDs
+SELECT setval('categories_id_seq', (SELECT COALESCE(MAX(id), 1) FROM categories));
+SELECT setval('reports_id_seq', (SELECT COALESCE(MAX(id), 1) FROM reports));
 SELECT setval('report_code_seq', 100006);
 
 -- ----------------------------------------------------

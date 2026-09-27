@@ -18,7 +18,7 @@ import StatusBadge from "../components/StatusBadge";
 import Modal from "../components/Modal";
 import EmptyState from "../components/EmptyState";
 import { useAuth } from "../context/AuthContext";
-import { storageService } from "../services/storageService";
+import { api } from "../services/api";
 import type { Report, ReportStatus } from "../types";
 import "../App.css";
 
@@ -36,9 +36,13 @@ export function AuthorityDashboard() {
   const [actionNote, setActionNote] = useState("");
   const [feedbackMsg, setFeedbackMsg] = useState("");
 
-  const refreshReports = () => {
-    const list = storageService.getReports();
-    setReports(list);
+  const refreshReports = async () => {
+    try {
+      const list = await api.getReports();
+      setReports(list);
+    } catch (err) {
+      console.error("Failed to load authority reports:", err);
+    }
   };
 
   useEffect(() => {
@@ -75,25 +79,29 @@ export function AuthorityDashboard() {
     setFeedbackMsg("");
   };
 
-  const handleUpdateStatus = (e: React.FormEvent) => {
+  const handleUpdateStatus = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedReport) return;
 
-    storageService.updateReportStatus(
-      selectedReport.id,
-      newStatus,
-      actionNote || `Status updated to ${newStatus} by authority`,
-      user?.name || "Civic Authority Officer",
-      actionNote
-    );
+    try {
+      await api.updateReportStatus(
+        selectedReport.id,
+        newStatus,
+        actionNote || `Status updated to ${newStatus} by authority`,
+        user?.name || "Civic Authority Officer",
+        actionNote
+      );
 
-    setFeedbackMsg("Report status and field notes updated successfully!");
-    refreshReports();
+      setFeedbackMsg("Report status and field notes updated successfully!");
+      await refreshReports();
 
-    setTimeout(() => {
-      setSelectedReport(null);
-      setFeedbackMsg("");
-    }, 1200);
+      setTimeout(() => {
+        setSelectedReport(null);
+        setFeedbackMsg("");
+      }, 1200);
+    } catch (err: any) {
+      setFeedbackMsg(err.message || "Failed to update report status.");
+    }
   };
 
   const formatDate = (iso: string) => {

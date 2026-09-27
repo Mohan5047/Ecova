@@ -37,21 +37,28 @@ export function Login() {
       } else {
         navigate("/dashboard");
       }
-    } catch {
-      setError("Login failed. Please check your credentials.");
+    } catch (err: any) {
+      setError(err.message || "Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuickDemo = (role: "citizen" | "authority" | "admin") => {
-    switchDemoRole(role);
-    if (role === "authority") {
-      navigate("/authority");
-    } else if (role === "admin") {
-      navigate("/admin");
-    } else {
-      navigate("/dashboard");
+  const handleQuickDemo = async (role: "citizen" | "authority" | "admin") => {
+    try {
+      setLoading(true);
+      await switchDemoRole(role);
+      if (role === "authority") {
+        navigate("/authority");
+      } else if (role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to switch demo role.");
+    } finally {
+      setLoading(false);
     }
   };
 

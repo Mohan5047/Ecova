@@ -16,7 +16,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import StatusBadge from "../components/StatusBadge";
 import { useAuth } from "../context/AuthContext";
-import { storageService } from "../services/storageService";
+import { api } from "../services/api";
 import type { Report } from "../types";
 import "../App.css";
 
@@ -26,12 +26,22 @@ export function CitizenDashboard() {
   const [reports, setReports] = useState<Report[]>([]);
 
   useEffect(() => {
-    const all = storageService.getReports();
-    // Filter to user's reports if user exists
-    const userReports = user
-      ? all.filter((r) => !r.userId || r.userId === user.id)
-      : all;
-    setReports(userReports);
+    let isMounted = true;
+    async function loadData() {
+      try {
+        const myReports = await api.getMyReports();
+        if (isMounted) {
+          setReports(myReports);
+        }
+      } catch (err) {
+        console.error("Failed to load dashboard data:", err);
+      }
+    }
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   const totalReports = reports.length;

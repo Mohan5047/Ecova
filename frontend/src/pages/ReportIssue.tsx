@@ -19,7 +19,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { storageService } from "../services/storageService";
+import { api } from "../services/api";
 import "../App.css";
 
 export function ReportIssue() {
@@ -45,6 +45,7 @@ export function ReportIssue() {
   const [locationError, setLocationError] = useState("");
 
   const [formError, setFormError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [generatedReportId, setGeneratedReportId] = useState("");
 
@@ -152,7 +153,7 @@ export function ReportIssue() {
   };
 
   // SUBMISSION HANDLER
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError("");
 
@@ -177,21 +178,27 @@ export function ReportIssue() {
       return;
     }
 
-    // Save into storage service
-    const saved = storageService.saveReport({
-      category,
-      description: description.trim(),
-      severity,
-      latitude: location.latitude,
-      longitude: location.longitude,
-      address: location.address,
-      photoUrl: photoPreviewUrl || undefined,
-      userId: user?.id || "usr-1",
-      citizenName: user?.name || "Anonymous Citizen",
-    });
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("photo", photo);
+      formData.append("category", category);
+      formData.append("description", description.trim());
+      formData.append("severity", severity.toUpperCase());
+      formData.append("latitude", location.latitude.toString());
+      formData.append("longitude", location.longitude.toString());
+      if (location.address) {
+        formData.append("address", location.address);
+      }
 
-    setGeneratedReportId(saved.id);
-    setSubmitted(true);
+      const created = await api.createReport(formData);
+      setGeneratedReportId(created.id);
+      setSubmitted(true);
+    } catch (err: any) {
+      setFormError(err.message || "Failed to submit report. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const resetForm = () => {
@@ -596,8 +603,8 @@ export function ReportIssue() {
               </span>
             </div>
 
-            <button type="submit" className="submit-report">
-              Submit Report
+            <button type="submit" className="submit-report" disabled={submitting}>
+              {submitting ? "Submitting Report..." : "Submit Report"}
               <Send size={18} />
             </button>
           </div>

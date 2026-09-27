@@ -14,8 +14,9 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import StatusBadge from "../components/StatusBadge";
 import EmptyState from "../components/EmptyState";
+import { LoadingSpinner } from "../components/LoadingSpinner";
 import { useAuth } from "../context/AuthContext";
-import { storageService } from "../services/storageService";
+import { api } from "../services/api";
 import type { Report } from "../types";
 import "../App.css";
 
@@ -23,18 +24,32 @@ export function MyReports() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
 
   useEffect(() => {
-    const allReports = storageService.getReports();
-    // Filter to user's reports if user exists, otherwise show demo list
-    const userReports = user
-      ? allReports.filter((r) => !r.userId || r.userId === user.id)
-      : allReports;
-    setReports(userReports);
+    let isMounted = true;
+    async function loadReports() {
+      setLoading(true);
+      try {
+        const data = await api.getMyReports();
+        if (isMounted) {
+          setReports(data);
+        }
+      } catch (err) {
+        console.error("Failed to load user reports:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadReports();
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   const categories = [
@@ -182,7 +197,11 @@ export function MyReports() {
         </div>
 
         {/* REPORTS LIST */}
-        {filteredReports.length === 0 ? (
+        {loading ? (
+          <div style={{ padding: "60px 0", display: "flex", justifyContent: "center" }}>
+            <LoadingSpinner text="Loading your submitted reports from database..." />
+          </div>
+        ) : filteredReports.length === 0 ? (
           <EmptyState
             icon={Inbox}
             title="No reports match your filters"

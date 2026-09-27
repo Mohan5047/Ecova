@@ -24,8 +24,10 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
 
   const handleClick = (notif: Notification) => {
     onNotificationClick(notif.id, notif.reportId);
-    if (notif.reportId) {
-      navigate(`/tracking?id=${notif.reportId}`);
+    const codeMatch = notif.title.match(/ECOVA-\d+/i) || notif.message.match(/ECOVA-\d+/i);
+    const targetCode = notif.reportId || (codeMatch ? codeMatch[0] : null);
+    if (targetCode) {
+      navigate(`/tracking?id=${targetCode}`);
       onClose();
     }
   };

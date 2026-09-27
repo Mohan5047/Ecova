@@ -5,13 +5,23 @@ import type { UserRole } from '../types';
 import { ShieldAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { LoadingSpinner } from './LoadingSpinner';
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: UserRole[];
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-  const { user, isAuthenticated, switchDemoRole } = useAuth();
+  const { user, loading, isAuthenticated, switchDemoRole } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <LoadingSpinner text="Verifying session..." />
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;

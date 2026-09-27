@@ -13,7 +13,8 @@ import StatusBadge from "../components/StatusBadge";
 import StatusTimeline from "../components/StatusTimeline";
 import LocationPreview from "../components/LocationPreview";
 import EmptyState from "../components/EmptyState";
-import { storageService } from "../services/storageService";
+import { LoadingSpinner } from "../components/LoadingSpinner";
+import { api } from "../services/api";
 import type { Report } from "../types";
 import "../App.css";
 
@@ -23,8 +24,9 @@ export function ReportTracking() {
   const [currentReport, setCurrentReport] = useState<Report | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchError, setSearchError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const doSearch = (idToSearch: string) => {
+  const doSearch = async (idToSearch: string) => {
     const trimmed = idToSearch.trim().toUpperCase();
     if (!trimmed) {
       setSearchError("Please enter a valid Report ID (e.g. ECOVA-100001).");
@@ -32,9 +34,17 @@ export function ReportTracking() {
     }
     setSearchError("");
     setHasSearched(true);
+    setLoading(true);
 
-    const found = storageService.getReportById(trimmed);
-    setCurrentReport(found);
+    try {
+      const found = await api.getReportByCode(trimmed);
+      setCurrentReport(found);
+    } catch (err: any) {
+      setSearchError(err.message || "Failed to load report details.");
+      setCurrentReport(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Sync with URL query parameter
@@ -44,13 +54,9 @@ export function ReportTracking() {
       setReportIdInput(idFromUrl);
       doSearch(idFromUrl);
     } else {
-      // Default to the first report for instant demonstration
-      const all = storageService.getReports();
-      if (all.length > 0) {
-        setReportIdInput(all[0].id);
-        setCurrentReport(all[0]);
-        setHasSearched(true);
-      }
+      // Default to initial seeded report
+      setReportIdInput("ECOVA-100001");
+      doSearch("ECOVA-100001");
     }
   }, [searchParams]);
 
@@ -139,7 +145,13 @@ export function ReportTracking() {
         </div>
 
         {/* RESULT SECTION */}
-        {hasSearched && !currentReport && (
+        {loading && (
+          <div style={{ padding: "40px 0", display: "flex", justifyContent: "center" }}>
+            <LoadingSpinner text="Retrieving report and status timeline from database..." />
+          </div>
+        )}
+
+        {!loading && hasSearched && !currentReport && (
           <EmptyState
             icon={FileQuestion}
             title="We couldn't find a report with that ID"
@@ -149,7 +161,7 @@ export function ReportTracking() {
           />
         )}
 
-        {currentReport && (
+        {!loading && currentReport && (
           <div className="tracking-result-grid">
             {/* LEFT COLUMN: DETAILS & PHOTO */}
             <div className="tracking-details-card">
