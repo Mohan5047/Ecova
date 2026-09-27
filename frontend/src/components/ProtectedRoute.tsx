@@ -18,7 +18,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <LoadingSpinner text="Verifying session..." />
+        <LoadingSpinner message="Verifying session..." />
       </div>
     );
   }

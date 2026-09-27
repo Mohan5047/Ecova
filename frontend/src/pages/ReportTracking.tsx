@@ -147,7 +147,7 @@ export function ReportTracking() {
         {/* RESULT SECTION */}
         {loading && (
           <div style={{ padding: "40px 0", display: "flex", justifyContent: "center" }}>
-            <LoadingSpinner text="Retrieving report and status timeline from database..." />
+            <LoadingSpinner message="Retrieving report and status timeline from database..." />
           </div>
         )}
 

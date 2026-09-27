@@ -18,14 +18,12 @@ import {
   Search,
   RotateCcw,
 } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import "../App.css";
 
 export function ReportIssue() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // FORM STATES

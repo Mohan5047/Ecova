@@ -199,7 +199,7 @@ export function MyReports() {
         {/* REPORTS LIST */}
         {loading ? (
           <div style={{ padding: "60px 0", display: "flex", justifyContent: "center" }}>
-            <LoadingSpinner text="Loading your submitted reports from database..." />
+            <LoadingSpinner message="Loading your submitted reports from database..." />
           </div>
         ) : filteredReports.length === 0 ? (
           <EmptyState
