@@ -19,6 +19,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { api } from "../services/api";
+import { InteractiveMap } from "../components/InteractiveMap";
 import "../App.css";
 
 export function ReportIssue() {
@@ -496,6 +497,34 @@ export function ReportIssue() {
                 <span>{locationError}</span>
               </div>
             )}
+
+            {/* INTERACTIVE PINPOINT MAP */}
+            <div className="report-map-picker-container" style={{ marginTop: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontSize: '0.85rem', color: '#4b5563', fontWeight: 600 }}>
+                  🗺️ Fine-tune location on map
+                </span>
+                <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 500 }}>
+                  Click or drag marker to adjust
+                </span>
+              </div>
+              <InteractiveMap
+                mode="picker"
+                center={location ? [location.latitude, location.longitude] : [12.9716, 77.5946]}
+                zoom={location ? 15 : 12}
+                selectedLocation={location}
+                onLocationSelect={(coords) => {
+                  setLocation((prev) => ({
+                    latitude: coords.latitude,
+                    longitude: coords.longitude,
+                    address: prev?.address || `Pinned at ${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`,
+                  }));
+                  setLocationError("");
+                  setFormError("");
+                }}
+                height="220px"
+              />
+            </div>
           </section>
 
           {/* STEP 04 - DESCRIPTION */}

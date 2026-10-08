@@ -55,6 +55,10 @@ export interface Report {
   photo_url?: string;
   status: ReportStatus;
   authority_id?: string;
+  upvotes?: number;
+  rating?: number;
+  feedback_text?: string;
+  has_upvoted?: boolean;
   created_at: Date;
   updated_at: Date;
   resolved_at?: Date;

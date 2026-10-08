@@ -192,7 +192,8 @@ export const reportController = {
       const reportRes = await query(
         `SELECT 
            r.id, r.report_code, r.description, r.severity, r.latitude, r.longitude, 
-           r.address, r.photo_url, r.status, r.created_at, r.updated_at, r.resolved_at,
+           r.address, r.photo_url, r.status, r.upvotes, r.rating, r.feedback_text,
+           r.created_at, r.updated_at, r.resolved_at,
            c.name as category_name, c.icon as category_icon,
            auth.full_name as authority_name
          FROM reports r
@@ -727,6 +728,126 @@ export const reportController = {
     } catch (error: any) {
       console.error('[ReportController.addReportAction]:', error);
       res.status(500).json({ success: false, message: 'Failed to record action' });
+    }
+  },
+
+  /**
+   * Community Upvoting: Toggle upvote on a report
+   */
+  async toggleUpvote(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+
+      const { id } = req.params;
+      let reportId = parseInt(id, 10);
+
+      if (isNaN(reportId)) {
+        const found = await query<{ id: number }>('SELECT id FROM reports WHERE UPPER(report_code) = UPPER($1)', [id]);
+        if (found.rows.length === 0) {
+          res.status(404).json({ success: false, message: 'Report not found' });
+          return;
+        }
+        reportId = found.rows[0].id;
+      }
+
+      const result = await withTransaction(async (client) => {
+        const existing = await client.query(
+          'SELECT id FROM report_upvotes WHERE report_id = $1 AND user_id = $2',
+          [reportId, req.user!.id]
+        );
+
+        if (existing.rows.length > 0) {
+          await client.query('DELETE FROM report_upvotes WHERE report_id = $1 AND user_id = $2', [
+            reportId,
+            req.user!.id,
+          ]);
+          const updateRes = await client.query<{ upvotes: number }>(
+            'UPDATE reports SET upvotes = GREATEST(0, upvotes - 1) WHERE id = $1 RETURNING upvotes',
+            [reportId]
+          );
+          return { upvoted: false, upvotes: updateRes.rows[0].upvotes };
+        } else {
+          await client.query('INSERT INTO report_upvotes (report_id, user_id) VALUES ($1, $2)', [
+            reportId,
+            req.user!.id,
+          ]);
+          const updateRes = await client.query<{ upvotes: number }>(
+            'UPDATE reports SET upvotes = upvotes + 1 WHERE id = $1 RETURNING upvotes',
+            [reportId]
+          );
+          return { upvoted: true, upvotes: updateRes.rows[0].upvotes };
+        }
+      });
+
+      broadcast('report:upvoted', { reportId, upvotes: result.upvotes });
+
+      res.status(200).json({
+        success: true,
+        message: result.upvoted ? 'Report upvoted' : 'Upvote removed',
+        data: result,
+      });
+    } catch (error: any) {
+      console.error('[ReportController.toggleUpvote]:', error);
+      res.status(500).json({ success: false, message: 'Failed to process upvote' });
+    }
+  },
+
+  /**
+   * Citizen Resolution Feedback: Submit 1-5 star rating and comment on resolved reports
+   */
+  async submitFeedback(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+
+      const { id } = req.params;
+      const { rating, feedback } = req.body;
+      const ratingNum = parseInt(rating, 10);
+
+      if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+        res.status(400).json({ success: false, message: 'Rating must be an integer between 1 and 5' });
+        return;
+      }
+
+      let reportId = parseInt(id, 10);
+      if (isNaN(reportId)) {
+        const found = await query<{ id: number }>('SELECT id FROM reports WHERE UPPER(report_code) = UPPER($1)', [id]);
+        if (found.rows.length === 0) {
+          res.status(404).json({ success: false, message: 'Report not found' });
+          return;
+        }
+        reportId = found.rows[0].id;
+      }
+
+      const updateRes = await query<Report>(
+        `UPDATE reports 
+         SET rating = $1, feedback_text = $2, updated_at = NOW() 
+         WHERE id = $3 AND status = 'RESOLVED'
+         RETURNING *;`,
+        [ratingNum, feedback ? feedback.trim() : null, reportId]
+      );
+
+      if (updateRes.rows.length === 0) {
+        res.status(400).json({
+          success: false,
+          message: 'Feedback can only be submitted on resolved reports',
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Feedback submitted successfully. Thank you for making our surroundings better!',
+        data: updateRes.rows[0],
+      });
+    } catch (error: any) {
+      console.error('[ReportController.submitFeedback]:', error);
+      res.status(500).json({ success: false, message: 'Failed to submit feedback' });
     }
   },
 };

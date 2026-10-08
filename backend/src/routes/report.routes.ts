@@ -36,4 +36,8 @@ router.post(
   reportController.addReportAction
 );
 
+// Community upvoting & citizen feedback
+router.post('/:id/upvote', authMiddleware, reportController.toggleUpvote);
+router.post('/:id/feedback', authMiddleware, reportController.submitFeedback);
+
 export default router;

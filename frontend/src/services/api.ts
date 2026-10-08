@@ -67,6 +67,10 @@ function normalizeReport(raw: any): Report {
     citizenName: raw.citizen_name || raw.citizenName,
     assignedAuthority: raw.authority_name || raw.assignedAuthority,
     actionNotes: raw.actions && raw.actions.length > 0 ? raw.actions[0].note : raw.actionNotes,
+    upvotes: raw.upvotes !== undefined ? parseInt(raw.upvotes, 10) : 0,
+    rating: raw.rating !== undefined && raw.rating !== null ? parseInt(raw.rating, 10) : undefined,
+    feedbackText: raw.feedback_text || undefined,
+    hasUpvoted: !!raw.has_upvoted,
   };
 }
 
@@ -289,6 +293,21 @@ export const api = {
       body: JSON.stringify({ actionType, note }),
     });
     return res.data;
+  },
+
+  async toggleUpvote(id: string): Promise<{ upvoted: boolean; upvotes: number }> {
+    const res = await this.request(`/reports/${id}/upvote`, {
+      method: 'POST',
+    });
+    return res.data;
+  },
+
+  async submitFeedback(id: string, rating: number, feedback?: string): Promise<Report> {
+    const res = await this.request(`/reports/${id}/feedback`, {
+      method: 'POST',
+      body: JSON.stringify({ rating, feedback }),
+    });
+    return normalizeReport(res.data);
   },
 
   // ==========================================

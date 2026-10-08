@@ -17,6 +17,7 @@ import {
   Sparkles,
   AlertTriangle,
   Clock,
+  Compass,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -134,6 +135,11 @@ export function Home() {
                   <Camera size={19} />
                   Report an Issue
                   <ArrowRight size={18} />
+                </Link>
+
+                <Link to="/issues" className="hero-explore-btn">
+                  <Compass size={18} />
+                  Explore Community Map
                 </Link>
 
                 <Link to="/tracking" className="secondary-button hero-track-btn">
@@ -389,6 +395,50 @@ export function Home() {
                 </motion.div>
               );
             })}
+          </div>
+        </section>
+
+        {/* =========================================
+            COMMUNITY ISSUES & MAP SHOWCASE BANNER
+        ========================================= */}
+        <section className="community-spotlight-section">
+          <div className="community-spotlight-card">
+            <div className="community-spotlight-content">
+              <span className="section-label" style={{ color: "#059669" }}>
+                🗺️ LIVE CIVIC INTELLIGENCE
+              </span>
+              <h2>Explore Open Civic Reports on the Interactive Map</h2>
+              <p>
+                Browse real-time issues submitted by citizens across municipal wards. 
+                Upvote urgent concerns, track neighborhood cleanup progress, and view verified authority resolutions.
+              </p>
+              <div className="spotlight-actions">
+                <Link to="/issues" className="primary-button spotlight-btn">
+                  <Compass size={18} />
+                  Open Community Issues & Map
+                  <ArrowRight size={17} />
+                </Link>
+                <Link to="/tracking" className="secondary-button spotlight-track-btn">
+                  <Search size={17} />
+                  Track Specific Report
+                </Link>
+              </div>
+            </div>
+
+            <div className="community-spotlight-stats">
+              <div className="spotlight-stat-item">
+                <strong className="spotlight-number">100%</strong>
+                <span>Open Civic Transparency</span>
+              </div>
+              <div className="spotlight-stat-item">
+                <strong className="spotlight-number">24/7</strong>
+                <span>Authority Emergency Helplines</span>
+              </div>
+              <div className="spotlight-stat-item">
+                <strong className="spotlight-number">&lt; 48h</strong>
+                <span>Average Response Dispatch</span>
+              </div>
+            </div>
           </div>
         </section>
 

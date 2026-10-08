@@ -10,6 +10,7 @@ import CitizenDashboard from "./pages/CitizenDashboard";
 import AuthorityDashboard from "./pages/AuthorityDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
+import CommunityIssues from "./pages/CommunityIssues";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
@@ -20,6 +21,8 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
+          <Route path="/issues" element={<CommunityIssues />} />
+          <Route path="/explore" element={<CommunityIssues />} />
           <Route path="/report" element={<ReportIssue />} />
           <Route path="/tracking" element={<ReportTracking />} />
           <Route path="/login" element={<Login />} />

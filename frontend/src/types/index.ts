@@ -46,6 +46,10 @@ export interface Report {
   citizenName?: string;
   assignedAuthority?: string;
   actionNotes?: string;
+  upvotes?: number;
+  rating?: number;
+  feedbackText?: string;
+  hasUpvoted?: boolean;
 }
 
 export interface Notification {

@@ -65,6 +65,9 @@ CREATE TABLE reports (
     photo_url TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'SUBMITTED' CHECK (status IN ('SUBMITTED', 'UNDER_REVIEW', 'ACTION_TAKEN', 'RESOLVED', 'REJECTED')),
     authority_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    upvotes INT NOT NULL DEFAULT 0,
+    rating INT CHECK (rating >= 1 AND rating <= 5),
+    feedback_text TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     resolved_at TIMESTAMP WITH TIME ZONE
@@ -129,6 +132,17 @@ CREATE TABLE activity_logs (
     entity_id VARCHAR(50),
     metadata JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+-- ----------------------------------------------------
+-- 9. REPORT UPVOTES TABLE (Community Endorsement)
+-- ----------------------------------------------------
+CREATE TABLE report_upvotes (
+    id SERIAL PRIMARY KEY,
+    report_id INT NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    UNIQUE (report_id, user_id)
 );
 
 -- ----------------------------------------------------

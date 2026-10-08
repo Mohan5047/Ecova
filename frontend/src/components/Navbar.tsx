@@ -12,16 +12,20 @@ import {
   LayoutDashboard,
   ShieldCheck,
   Building2,
+  PhoneCall,
+  Compass,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import { socketService } from "../services/socket";
 import type { Notification } from "../types";
 import NotificationPanel from "./NotificationPanel";
+import HelplinesModal from "./HelplinesModal";
 
 export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [helplinesOpen, setHelplinesOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
@@ -111,11 +115,14 @@ export function Navbar() {
               Home
             </Link>
 
+            <Link
+              to="/issues"
+              className={location.pathname === "/issues" ? "active-link" : ""}
+            >
+              Community Issues
+            </Link>
+
             <a href="/#how-it-works">How it works</a>
-
-            <a href="/#issues">Issues</a>
-
-            <a href="/#about">About</a>
 
             <Link
               to="/tracking"
@@ -124,6 +131,16 @@ export function Navbar() {
               <Search size={15} style={{ marginRight: 4 }} />
               Track Report
             </Link>
+
+            <button
+              type="button"
+              className="helplines-nav-btn"
+              onClick={() => setHelplinesOpen(true)}
+              title="24/7 Civic Emergency Numbers"
+            >
+              <PhoneCall size={14} />
+              <span>Helplines</span>
+            </button>
 
             {isAuthenticated && (
               <Link
@@ -220,19 +237,31 @@ export function Navbar() {
             <Link to="/" onClick={closeMenu}>
               Home
             </Link>
+            <Link to="/issues" onClick={closeMenu} className="mobile-highlight-link">
+              <Compass size={16} />
+              Explore Community Issues
+            </Link>
             <a href="/#how-it-works" onClick={closeMenu}>
               How it works
             </a>
             <a href="/#issues" onClick={closeMenu}>
-              Issues
-            </a>
-            <a href="/#about" onClick={closeMenu}>
-              About
+              Categories
             </a>
             <Link to="/tracking" onClick={closeMenu}>
               <Search size={16} />
               Track a Report
             </Link>
+            <button
+              type="button"
+              className="mobile-helpline-btn"
+              onClick={() => {
+                setHelplinesOpen(true);
+                closeMenu();
+              }}
+            >
+              <PhoneCall size={16} />
+              Civic Helplines (24/7)
+            </button>
 
             {isAuthenticated ? (
               <>
@@ -284,6 +313,12 @@ export function Navbar() {
         onClose={() => setNotifOpen(false)}
         onMarkAllRead={handleMarkAllRead}
         onNotificationClick={handleNotificationClick}
+      />
+
+      {/* 24/7 HELPLINES MODAL */}
+      <HelplinesModal
+        isOpen={helplinesOpen}
+        onClose={() => setHelplinesOpen(false)}
       />
     </>
   );
